@@ -1,0 +1,57 @@
+@startuml LiveSessionSequence
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Therapist" as T
+participant "Live Control Room\n(JSP / Chart.js)" as CtrlRoom
+participant "LiveControlServlet\n& CommandApiServlet" as Servlets
+participant "CommandQueue\n(BlockingQueue / ReentrantLock)" as CQ
+participant "TelemetrySimulator\n(Runnable Thread Pool)" as TS
+participant "CrisisEngine\n(Strategy Pattern)" as CE
+database "Database (JDBC)" as DB
+participant "Connected VR Headset\n(A-Frame / WebXR)" as Headset
+actor "Patient" as P
+
+== 1. Live Session Initialization ==
+T -> CtrlRoom: Launch Live Session #1 (Patient: Sarah)
+CtrlRoom -> Servlets: POST /therapist/live-control (action=START)
+Servlets -> DB: UPDATE live_sessions SET state='ACTIVE'
+Servlets -> TS: startSimulation(sessionId=1)
+TS -> TS: TelemetrySimulator thread begins heartbeat generation
+
+== 2. Biometric Telemetry Polling (Every 2 Seconds) ==
+loop Polling Interval (Every 2 Seconds via AJAX)
+    CtrlRoom -> Servlets: GET /api/telemetry?sessionId=1
+    Servlets -> DB: TelemetryDao.getLatest(sessionId=1)
+    Servlets --> CtrlRoom: JSON {heartRate: 78, stress: 3, hrv: 62}
+    CtrlRoom -> CtrlRoom: Chart.js dynamically redraws vitals graph
+end
+
+== 3. Remote Clinician Intervention via Thread-Safe CommandQueue ==
+T -> CtrlRoom: Switch Environment -> "Night Sky" & Send Guidance: "Breathe with the sphere"
+CtrlRoom -> Servlets: POST /therapist/live-control (command=SWITCH_ENV, prompt="Breathe...")
+Servlets -> CQ: CommandQueue.enqueue(sessionId=1, VrCommand)
+note over CQ: Synchronized thread-safe\nConcurrentHashMap & BlockingQueue
+
+Headset -> Servlets: GET /api/command?sessionId=1 (AJAX Poll every 2s)
+Servlets -> CQ: CommandQueue.poll(sessionId=1)
+CQ --> Servlets: VrCommand("SWITCH_ENVIRONMENT", "Night Sky")
+Servlets --> Headset: JSON {command: "SWITCH_ENVIRONMENT", payload: "Night Sky"}
+Headset -> Headset: A-Frame updates skybox to starfield & renders floating HUD prompt
+
+== 4. Emergency Stop Intervention ==
+alt Patient presses in-VR emergency stop OR Therapist halts
+    P -> Headset: Click floating "I NEED TO STOP" in VR
+    Headset -> Servlets: POST /api/emergency-stop?sessionId=1
+    Servlets -> DB: SessionDao.updateState(1, 'EMERGENCY_STOPPED')
+    Servlets -> TS: TelemetrySimulator.stop()
+    Servlets -> CQ: CommandQueue.enqueue(VrCommand("EMERGENCY_STOP"))
+    Servlets --> Headset: Redirect to /patient/emergency-grounding (5-4-3-2-1 Somatic Grounding)
+    CtrlRoom -> Servlets: Polling detects EMERGENCY_STOPPED
+    CtrlRoom -> CtrlRoom: Sound alert & display emergency halt banner
+end
+
+@enduml

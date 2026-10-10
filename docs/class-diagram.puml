@@ -1,0 +1,194 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam packageStyle rectangle
+
+package "com.vrtherapy.model (OOP Inheritance & Abstraction)" {
+    abstract class BaseEntity {
+        - Long id
+        - LocalDateTime createdAt
+        - LocalDateTime updatedAt
+        + getId() : Long
+        + getCreatedAt() : LocalDateTime
+        + getUpdatedAt() : LocalDateTime
+    }
+
+    abstract class User extends BaseEntity {
+        - String username
+        - String password
+        - String fullName
+        - String email
+        - Role role
+        - boolean active
+        - String phone
+        - String clinicalBioOrNotes
+    }
+
+    class Patient extends User {
+        - Long assignedTherapistId
+        - String emergencyContact
+        - Integer baselineAnxiety
+    }
+
+    class Therapist extends User {
+        - String licenseNumber
+        - String specialization
+        - Integer maxConcurrentPatients
+    }
+
+    class Admin extends User {
+        - String department
+        - Integer adminLevel
+    }
+
+    enum Role {
+        ADMIN
+        THERAPIST
+        PATIENT
+    }
+
+    class TherapySession extends BaseEntity {
+        - Long therapistId
+        - String title
+        - ConditionType conditionType
+        - EnvironmentType environmentType
+        - Integer durationMinutes
+        - Integer intensityLevel
+        - boolean audioEnabled
+        - boolean breathingGuideEnabled
+        - String notes
+        - String configurationJson
+    }
+
+    class SessionResult extends BaseEntity {
+        - Long sessionId
+        - Long patientId
+        - Integer preStressRating
+        - Integer postStressRating
+        - Integer durationSeconds
+        - Integer averageHeartRate
+        - Integer peakHeartRate
+        - boolean emergencyStopped
+        - String stopReason
+        + getStressDelta() : int
+        + getImprovementPercentage() : double
+    }
+
+    class Device extends BaseEntity {
+        - Long patientId
+        - String deviceName
+        - DeviceType deviceType
+        - String pairingCode
+        - LocalDateTime pairingCodeExpiresAt
+        - ConnectionStatus status
+        - LocalDateTime lastHeartbeat
+        - Integer latencyMs
+    }
+
+    enum LiveSessionState {
+        SCHEDULED
+        WAITING
+        ACTIVE
+        PAUSED
+        COMPLETED
+        EMERGENCY_STOPPED
+        + canTransitionTo(LiveSessionState) : boolean
+    }
+}
+
+package "com.vrtherapy.vrenvironment (Factory & Polymorphism)" {
+    interface VrEnvironment {
+        + getType() : EnvironmentType
+        + getName() : String
+        + getSkyColor(int) : String
+        + getGroundColor() : String
+        + getAmbientSoundAsset() : String
+        + generateSceneConfiguration(int, boolean, boolean) : Map<String, Object>
+        + adjustIntensity(int, int) : int
+    }
+
+    abstract class AbstractVrEnvironment implements VrEnvironment
+    class BeachEnvironment extends AbstractVrEnvironment
+    class ForestEnvironment extends AbstractVrEnvironment
+    class HeightsEnvironment extends AbstractVrEnvironment
+    class SocialEnvironment extends AbstractVrEnvironment
+    class BreathingEnvironment extends AbstractVrEnvironment
+    class NightSkyEnvironment extends AbstractVrEnvironment
+
+    class VrEnvironmentFactory {
+        + {static} getEnvironment(EnvironmentType) : VrEnvironment
+    }
+}
+
+package "com.vrtherapy.dao (Raw JDBC Data Access)" {
+    interface GenericDao<T, ID> {
+        + findById(ID) : Optional<T>
+        + findAll() : List<T>
+        + save(T) : T
+        + update(T) : T
+        + deleteById(ID) : boolean
+    }
+
+    class ConnectionManager {
+        - {static} ConnectionManager instance
+        - BlockingQueue<Connection> pool
+        + {static} getInstance() : ConnectionManager
+        + getConnection() : Connection
+        + releaseConnection(Connection) : void
+    }
+
+    interface UserDao extends GenericDao
+    interface SessionDao extends GenericDao
+    interface DeviceDao extends GenericDao
+    interface SessionResultDao extends GenericDao
+
+    class UserDaoImpl implements UserDao
+    class SessionDaoImpl implements SessionDao
+    class DeviceDaoImpl implements DeviceDao
+    class SessionResultDaoImpl implements SessionResultDao
+
+    UserDaoImpl ..> ConnectionManager : retrieves connection
+    SessionDaoImpl ..> ConnectionManager : retrieves connection
+}
+
+package "com.vrtherapy.thread (Multithreading & Concurrency)" {
+    class HeartbeatMonitor implements Runnable {
+        - ScheduledExecutorService scheduler
+        + start() : void
+        + stop() : void
+    }
+
+    class TelemetrySimulator implements Runnable {
+        - Long sessionId
+        - AtomicBoolean running
+        + run() : void
+    }
+
+    class VrConnectionRegistry {
+        - {static} ConcurrentHashMap<Long, Device> registry
+        - {static} AtomicInteger activeSessionCount
+        + {static} registerHeartbeat(Long) : void
+    }
+
+    class CommandQueue {
+        - {static} ConcurrentHashMap<Long, BlockingQueue<VrCommand>> queues
+        + {static} enqueue(Long, VrCommand) : void
+        + {static} poll(Long) : VrCommand
+    }
+}
+
+package "com.vrtherapy.servlet (MVC Web Controllers)" {
+    abstract class BaseServlet
+    class LiveControlServlet extends BaseServlet
+    class VrLaunchServlet extends BaseServlet
+    class DevicePairingServlet extends BaseServlet
+    class SessionDesignServlet extends BaseServlet
+    class EmergencyStopServlet extends BaseServlet
+    class TelemetryApiServlet extends BaseServlet
+    class CommandApiServlet extends BaseServlet
+
+    LiveControlServlet ..> CommandQueue : pushes commands
+    CommandApiServlet ..> CommandQueue : delivers commands
+    TelemetryApiServlet ..> VrConnectionRegistry : reports status
+}
+
+@enduml

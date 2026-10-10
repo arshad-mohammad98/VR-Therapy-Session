@@ -1,0 +1,130 @@
+@startuml
+skinparam linetype ortho
+
+entity "USERS" as users {
+    * id : BIGINT <<PK, generated>>
+    --
+    * username : VARCHAR(50) <<UK>>
+    * password : VARCHAR(255)
+    * full_name : VARCHAR(100)
+    * email : VARCHAR(100) <<UK>>
+    * role : VARCHAR(20)
+    * active : BOOLEAN
+    phone : VARCHAR(20)
+    clinical_bio_or_notes : VARCHAR(500)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "THERAPY_SESSIONS" as sessions {
+    * id : BIGINT <<PK, generated>>
+    --
+    * therapist_id : BIGINT <<FK>>
+    * title : VARCHAR(120)
+    * condition_type : VARCHAR(30)
+    * environment_type : VARCHAR(30)
+    * duration_minutes : INT
+    * intensity_level : INT
+    * background_audio_enabled : BOOLEAN
+    * guided_breathing_enabled : BOOLEAN
+    clinical_notes : VARCHAR(2000)
+    configuration_json : TEXT
+    * active : BOOLEAN
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "SESSION_ASSIGNMENTS" as assignments {
+    * id : BIGINT <<PK, generated>>
+    --
+    * session_id : BIGINT <<FK>>
+    * patient_id : BIGINT <<FK>>
+    * scheduled_time : TIMESTAMP
+    * status : VARCHAR(20)
+    therapist_instructions : VARCHAR(500)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "SESSION_RESULTS" as results {
+    * id : BIGINT <<PK, generated>>
+    --
+    * assignment_id : BIGINT <<FK, UK>>
+    * duration_minutes_completed : INT
+    * pre_stress_rating : INT
+    * post_stress_rating : INT
+    * average_heart_rate : INT
+    * peak_heart_rate : INT
+    * completed_at : TIMESTAMP
+    clinical_notes : VARCHAR(1000)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "FEEDBACKS" as feedbacks {
+    * id : BIGINT <<PK, generated>>
+    --
+    * assignment_id : BIGINT <<FK, UK>>
+    * rating : INT
+    * comfort_level : INT
+    comments : VARCHAR(1500)
+    * therapist_reviewed : BOOLEAN
+    therapist_notes : VARCHAR(1000)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "SUPPORT_TICKETS" as tickets {
+    * id : BIGINT <<PK, generated>>
+    --
+    * created_by_id : BIGINT <<FK>>
+    * subject : VARCHAR(150)
+    * description : VARCHAR(2000)
+    * priority : VARCHAR(20)
+    * status : VARCHAR(20)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "TICKET_REPLIES" as replies {
+    * id : BIGINT <<PK, generated>>
+    --
+    * ticket_id : BIGINT <<FK>>
+    * author_id : BIGINT <<FK>>
+    * message : VARCHAR(2000)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "SYSTEM_SETTINGS" as settings {
+    * id : BIGINT <<PK, generated>>
+    --
+    * setting_key : VARCHAR(100) <<UK>>
+    * setting_value : VARCHAR(500)
+    description : VARCHAR(255)
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+entity "AUDIT_LOGS" as audit_logs {
+    * id : BIGINT <<PK, generated>>
+    --
+    * username : VARCHAR(50)
+    * action : VARCHAR(100)
+    details : VARCHAR(2000)
+    ip_address : VARCHAR(50)
+    * timestamp : TIMESTAMP
+    created_at : TIMESTAMP
+    updated_at : TIMESTAMP
+}
+
+users ||--o{ sessions : "designs"
+sessions ||--o{ assignments : "scheduled as"
+users ||--o{ assignments : "assigned to"
+assignments ||--o| results : "produces"
+assignments ||--o| feedbacks : "evaluated by"
+users ||--o{ tickets : "raises"
+tickets ||--o{ replies : "contains"
+users ||--o{ replies : "authors"
+
+@enduml

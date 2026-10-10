@@ -1,0 +1,57 @@
+@startuml DevicePairingSequence
+autonumber
+skinparam style strictuml
+skinparam sequenceMessageAlign center
+skinparam BoxPadding 10
+skinparam ParticipantPadding 10
+
+actor "Patient" as P
+participant "Patient Web Portal\n(Browser)" as Web
+participant "VR Device / Headset\n(Meta Quest / Pico)" as Headset
+participant "DevicePairingService\n(Spring Boot)" as DPS
+database "H2 Database\n(vr_devices)" as DB
+participant "STOMP Message Broker\n(/topic/alerts)" as WsBroker
+actor "Therapist / Admin" as T
+
+== 1. Device Registration & 6-Digit Code Generation ==
+P -> Web: Navigate to "Connect My VR Device"
+P -> Web: Submit Device Registration ("Meta Quest 3", HEADSET)
+Web -> DPS: registerDevice(patient, "Meta Quest 3", HEADSET)
+activate DPS
+DPS -> DPS: generateSixDigitCode() [5-Min Validity]
+DPS -> DB: save(VrDevice status=PAIRING, code="842190", expiresAt=now+5m)
+DPS --> Web: VrDevice (pairingCode="842190")
+deactivate DPS
+Web --> P: Display 6-Digit Pairing Code "842190" (Countdown: 5m)
+
+== 2. Headset Client Verification & Binding ==
+P -> Headset: Put on Headset & Launch WebXR Client / Simulator
+P -> Headset: Enter 6-digit Code "842190"
+Headset -> DPS: POST /api/live/device/pair {code: "842190", ua: "Quest/32.0"}
+activate DPS
+DPS -> DB: findByPairingCode("842190")
+DB --> DPS: VrDevice record
+DPS -> DPS: verifyPairingCodeValidity() (Checks expiry timestamp)
+alt Code Valid (< 5 minutes)
+    DPS -> DB: update(status=CONNECTED, lastHeartbeat=now, clear pairingCode)
+    DPS -> WsBroker: convertAndSend("/topic/alerts", DEVICE_CONNECTED)
+    WsBroker -> T: Display "Device Paired & Connected" Alert
+    DPS --> Headset: 200 OK {status: "PAIRED", deviceId: 1}
+else Code Expired (> 5 minutes)
+    DPS -> DB: update(status=DISCONNECTED)
+    DPS --> Headset: 400 Bad Request ("Pairing code expired. Refresh on portal.")
+end
+deactivate DPS
+
+== 3. Periodic Telemetry Heartbeat Loop ==
+loop Every 15 seconds
+    Headset -> DPS: POST /api/live/device/1/heartbeat (or STOMP ping)
+    DPS -> DB: recordHeartbeat(deviceId=1, lastSeen=now)
+end
+
+== 4. Diagnostic Latency Ping/Pong ==
+P -> Web: Click "Test Ping"
+Web -> DPS: GET /api/live/device/1/ping?clientTime=1728500000000
+DPS --> Web: 200 OK {pong: true, latencyMs: 12}
+Web --> P: Display "Roundtrip Latency: 12 ms (Ready for VR)"
+@enduml

@@ -1,0 +1,77 @@
+@startuml
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Licensed Therapist" as Therapist
+actor "Registered Patient" as Patient
+actor "System Administrator" as Admin
+
+rectangle "Virtual Reality Therapy Sessions System" {
+    package "Session Authoring & Strategy" {
+        usecase "Design VR Session Protocol" as UC_Design
+        usecase "Select Condition & 3D Environment" as UC_SelectEnv
+        usecase "Configure Intensity & Breathing Pacing" as UC_Params
+        usecase "Review Feedback & Sentiment Summary" as UC_ReviewFeedback
+        usecase "Apply Rule-Based Suggestion Adjustment" as UC_ApplySuggestion
+        usecase "Assign & Schedule Session to Patient" as UC_Assign
+        usecase "Operate Live Session Control Room" as UC_LiveControl
+        usecase "Build Exposure Fear Hierarchy" as UC_Hierarchy
+        usecase "Monitor Patient Progress & Trends" as UC_Monitor
+        usecase "Download CSV / Text Clinical Reports" as UC_DownloadReports
+    }
+
+    package "Patient WebXR Immersion" {
+        usecase "Pair VR Headset via 6-Digit Code" as UC_PairDevice
+        usecase "View Upcoming Schedule & Assigned Protocols" as UC_ViewSchedule
+        usecase "Launch WebXR A-Frame VR Scene" as UC_LaunchVR
+        usecase "Submit Pre-Session Stress Rating (1-10)" as UC_PreStress
+        usecase "Interact with Guided Breathing Sphere" as UC_BreathingGuide
+        usecase "Trigger Emergency Panic Stop in VR" as UC_EmergencyStop
+        usecase "Conclude Session & Rate Post-Stress" as UC_PostStress
+        usecase "Post Biometric Telemetry via REST" as UC_SubmitTelemetry
+        usecase "Submit Subjective Rating & Comfort Feedback" as UC_SubmitFeedback
+        usecase "View Personal Trajectory & Recovery Chart" as UC_PatientHistory
+    }
+
+    package "Platform Administration & Operations" {
+        usecase "Manage User Accounts (Create/Edit/Deactivate)" as UC_ManageUsers
+        usecase "Configure Application System Settings" as UC_Settings
+        usecase "Inspect Real-Time Server Health & Diagnostics" as UC_Status
+        usecase "Review Security & Clinical Audit Logs" as UC_AuditLogs
+        usecase "Submit Technical Support Ticket" as UC_RaiseTicket
+        usecase "Resolve Ticket & Reply" as UC_ResolveTicket
+    }
+}
+
+Therapist --> UC_Design
+UC_Design ..> UC_SelectEnv : <<include>>
+UC_Design ..> UC_Params : <<include>>
+Therapist --> UC_Assign
+Therapist --> UC_LiveControl
+Therapist --> UC_Hierarchy
+Therapist --> UC_Monitor
+Therapist --> UC_DownloadReports
+Therapist --> UC_ReviewFeedback
+Therapist --> UC_ApplySuggestion
+Therapist --> UC_RaiseTicket
+
+Patient --> UC_PairDevice
+Patient --> UC_ViewSchedule
+Patient --> UC_LaunchVR
+UC_LaunchVR ..> UC_PreStress : <<include>>
+UC_LaunchVR ..> UC_BreathingGuide : <<include>>
+UC_LaunchVR ..> UC_EmergencyStop : <<extend>>
+UC_LaunchVR ..> UC_PostStress : <<include>>
+UC_LaunchVR ..> UC_SubmitTelemetry : <<include>>
+Patient --> UC_SubmitFeedback
+Patient --> UC_PatientHistory
+Patient --> UC_RaiseTicket
+
+Admin --> UC_ManageUsers
+Admin --> UC_Settings
+Admin --> UC_Status
+Admin --> UC_AuditLogs
+Admin --> UC_ResolveTicket
+
+@enduml
