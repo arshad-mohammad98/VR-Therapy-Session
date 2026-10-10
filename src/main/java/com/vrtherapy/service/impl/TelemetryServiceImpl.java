@@ -84,10 +84,10 @@ public class TelemetryServiceImpl implements TelemetryService {
     public Optional<String> checkCrisisStatus(LiveSession session, int heartRate, int stressLevel) {
         CrisisContext ctx = new CrisisContext(
                 session,
+                null,
                 heartRate,
                 stressLevel,
-                session.getElapsedSeconds(),
-                heartRate - 75
+                1
         );
         return crisisEngine.evaluateCrisis(ctx);
     }

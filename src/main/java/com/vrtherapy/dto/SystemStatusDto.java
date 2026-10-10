@@ -122,12 +122,56 @@ public class SystemStatusDto {
         this.heapMemoryUsedMb = heapMemoryUsedMb;
     }
 
+    public void setUsedMemoryMb(long usedMemoryMb) {
+        this.heapMemoryUsedMb = usedMemoryMb;
+    }
+
+    public long getUsedMemoryMb() {
+        return heapMemoryUsedMb;
+    }
+
+    private long totalMemoryMb;
+
+    public void setTotalMemoryMb(long totalMemoryMb) {
+        this.totalMemoryMb = totalMemoryMb;
+    }
+
+    public long getTotalMemoryMb() {
+        return totalMemoryMb;
+    }
+
     public long getHeapMemoryMaxMb() {
         return heapMemoryMaxMb;
     }
 
     public void setHeapMemoryMaxMb(long heapMemoryMaxMb) {
         this.heapMemoryMaxMb = heapMemoryMaxMb;
+    }
+
+    public void setMaxMemoryMb(long maxMemoryMb) {
+        this.heapMemoryMaxMb = maxMemoryMb;
+    }
+
+    public long getMaxMemoryMb() {
+        return heapMemoryMaxMb;
+    }
+
+    public void setAvgResponseTimeMs(double avgResponseTimeMs) {
+        this.averageResponseTimeMs = avgResponseTimeMs;
+    }
+
+    public double getAvgResponseTimeMs() {
+        return averageResponseTimeMs;
+    }
+
+    private long activeWebSessions;
+
+    public void setActiveWebSessions(long activeWebSessions) {
+        this.activeWebSessions = activeWebSessions;
+    }
+
+    public long getActiveWebSessions() {
+        return activeWebSessions;
     }
 
     public double getHeapMemoryUsagePercent() {

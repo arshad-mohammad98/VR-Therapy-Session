@@ -91,6 +91,14 @@ public class LiveSession extends BaseEntity {
         this.breathingGuideActive = breathingGuideActive;
     }
 
+    public boolean isGuidedBreathingActive() {
+        return breathingGuideActive;
+    }
+
+    public void setGuidedBreathingActive(boolean guidedBreathingActive) {
+        this.breathingGuideActive = guidedBreathingActive;
+    }
+
     public int getElapsedSeconds() {
         return elapsedSeconds;
     }

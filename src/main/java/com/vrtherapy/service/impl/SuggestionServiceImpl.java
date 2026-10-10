@@ -63,28 +63,7 @@ public class SuggestionServiceImpl implements SuggestionService {
         List<SessionResult> results = resultDao.findBySessionId(session.getId());
         List<Feedback> feedbacks = feedbackDao.findBySessionId(session.getId());
 
-        int sampleCount = results.size();
-        double avgPreStress = results.stream().mapToInt(SessionResult::getPreStressScore).average().orElse(5.0);
-        double avgPostStress = results.stream().mapToInt(SessionResult::getPostStressScore).average().orElse(4.0);
-        double avgStressDelta = avgPreStress - avgPostStress;
-        double avgRating = feedbacks.stream().mapToInt(Feedback::getRating).average().orElse(4.0);
-        double avgComfort = feedbacks.stream().mapToInt(Feedback::getComfortScore).average().orElse(4.0);
-        double avgNausea = feedbacks.stream().mapToInt(Feedback::getNauseaScore).average().orElse(1.0);
-        double avgHeartRate = results.stream().mapToInt(SessionResult::getAverageHeartRate).average().orElse(75.0);
-        int peakHeartRate = results.stream().mapToInt(SessionResult::getPeakHeartRate).max().orElse(85);
-
-        SuggestionContext context = new SuggestionContext(
-                session,
-                sampleCount,
-                avgPreStress,
-                avgPostStress,
-                avgStressDelta,
-                avgRating,
-                avgComfort,
-                avgNausea,
-                avgHeartRate,
-                peakHeartRate
-        );
+        SuggestionContext context = new SuggestionContext(session, results, feedbacks);
 
         List<SessionAdjustmentSuggestion> suggestions = suggestionEngine.findAllSuggestions(context);
         logger.info("Generated {} clinical adjustment suggestions for session {}", suggestions.size(), session.getId());

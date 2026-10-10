@@ -34,6 +34,14 @@ public class SessionAssignmentDto {
         this.sessionId = sessionId;
     }
 
+    public Long getTherapySessionId() {
+        return sessionId;
+    }
+
+    public void setTherapySessionId(Long therapySessionId) {
+        this.sessionId = therapySessionId;
+    }
+
     public Long getPatientId() {
         return patientId;
     }

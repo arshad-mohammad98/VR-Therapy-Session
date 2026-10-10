@@ -138,7 +138,11 @@ public class TherapySessionServiceImpl implements TherapySessionService {
         if (therapist == null) {
             return sessionDao.findAll();
         }
-        return sessionDao.findByCreatedBy(therapist.getId());
+        List<TherapySession> authored = sessionDao.findByCreatedBy(therapist.getId());
+        if (authored == null || authored.isEmpty()) {
+            return sessionDao.findAll();
+        }
+        return authored;
     }
 
     @Override

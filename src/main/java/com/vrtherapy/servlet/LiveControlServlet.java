@@ -3,6 +3,7 @@ package com.vrtherapy.servlet;
 import com.vrtherapy.model.EnvironmentType;
 import com.vrtherapy.model.LiveSession;
 import com.vrtherapy.model.LiveSessionState;
+import com.vrtherapy.model.TherapySession;
 import com.vrtherapy.model.User;
 import com.vrtherapy.service.LiveSessionService;
 import com.vrtherapy.service.TherapySessionService;
@@ -16,6 +17,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Optional;
 
 @WebServlet(name = "LiveControlServlet", urlPatterns = {"/therapist/live-control"})
@@ -43,7 +45,11 @@ public class LiveControlServlet extends BaseServlet {
 
         req.setAttribute("activeSession", activeSession);
         req.setAttribute("patients", userService.getPatientsByTherapist(therapist.getId()));
-        req.setAttribute("sessionTemplates", therapySessionService.getSessionsByTherapist(therapist));
+        List<TherapySession> templates = therapySessionService.getAllSessions();
+        if (templates == null || templates.isEmpty()) {
+            templates = therapySessionService.getSessionsByTherapist(therapist);
+        }
+        req.setAttribute("sessionTemplates", templates);
         req.setAttribute("environments", EnvironmentType.values());
         forward(req, resp, "therapist/live-control");
     }

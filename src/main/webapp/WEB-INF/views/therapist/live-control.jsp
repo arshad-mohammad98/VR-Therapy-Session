@@ -111,15 +111,15 @@
                 <div style="display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #e2e8f0;">
                     <div>
                         <div style="font-size: 0.85rem; font-weight: 600; color: #334155;">Guided Breathing Sphere</div>
-                        <div style="font-size: 0.75rem; color: #64748b;">Status: ${activeSession.guidedBreathingActive ? 'Active Pulsing' : 'Off'}</div>
+                        <div style="font-size: 0.75rem; color: #64748b;">Status: ${activeSession.breathingGuideActive ? 'Active Pulsing' : 'Off'}</div>
                     </div>
                     <form action="${pageContext.request.contextPath}/therapist/live-control" method="post">
                         <input type="hidden" name="csrfToken" value="${sessionScope.csrfToken}" />
                         <input type="hidden" name="action" value="toggleBreathing" />
                         <input type="hidden" name="sessionId" value="${activeSession.id}" />
-                        <input type="hidden" name="active" value="${!activeSession.guidedBreathingActive}" />
-                        <button type="submit" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; background: ${activeSession.guidedBreathingActive ? '#f59e0b' : '#10b981'}; color: white; border: none;">
-                            ${activeSession.guidedBreathingActive ? 'Stop Guide' : 'Start Guide'}
+                        <input type="hidden" name="active" value="${!activeSession.breathingGuideActive}" />
+                        <button type="submit" style="padding: 0.4rem 0.85rem; border-radius: 6px; font-weight: 600; font-size: 0.8rem; cursor: pointer; background: ${activeSession.breathingGuideActive ? '#f59e0b' : '#10b981'}; color: white; border: none;">
+                            ${activeSession.breathingGuideActive ? 'Stop Guide' : 'Start Guide'}
                         </button>
                     </form>
                 </div>
@@ -270,9 +270,9 @@
 
                 <div>
                     <label for="templateId" style="display: block; font-size: 0.875rem; font-weight: 600; color: #334155; margin-bottom: 0.35rem;">Protocol Template</label>
-                    <select id="templateId" name="templateId" required style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; background: white;">
+                    <select id="templateId" name="templateId" required style="width: 100%; padding: 0.75rem 1rem; border-radius: 8px; border: 1px solid #cbd5e1; font-size: 0.95rem; background: white;" onchange="syncTemplateDefaults(this)">
                         <c:forEach var="tpl" items="${sessionTemplates}">
-                            <option value="${tpl.id}">${tpl.title} (${tpl.conditionType.displayName})</option>
+                            <option value="${tpl.id}" data-env="${tpl.vrEnvironment.name()}" data-intensity="${tpl.intensityLevel}">${tpl.title} (${tpl.conditionType.displayName})</option>
                         </c:forEach>
                     </select>
                 </div>
@@ -303,6 +303,30 @@
                     🚀 Launch Live Remote Session
                 </button>
             </form>
+            <script>
+            function syncTemplateDefaults(selectElem) {
+                if (!selectElem || selectElem.selectedIndex < 0) return;
+                const opt = selectElem.options[selectElem.selectedIndex];
+                if (opt) {
+                    const env = opt.getAttribute('data-env');
+                    const intensity = opt.getAttribute('data-intensity');
+                    if (env) {
+                        const envSelect = document.getElementById('environment');
+                        if (envSelect) envSelect.value = env;
+                    }
+                    if (intensity) {
+                        const intSelect = document.getElementById('intensity');
+                        if (intSelect) intSelect.value = intensity;
+                    }
+                }
+            }
+            document.addEventListener('DOMContentLoaded', function() {
+                const tplSelect = document.getElementById('templateId');
+                if (tplSelect && tplSelect.options.length > 0) {
+                    syncTemplateDefaults(tplSelect);
+                }
+            });
+            </script>
         </div>
     </c:otherwise>
 </c:choose>

@@ -62,6 +62,24 @@ public class FeedbackSummaryDto {
         this.averageComfortLevel = averageComfortLevel;
     }
 
+    public double getAverageComfort() {
+        return averageComfortLevel;
+    }
+
+    public void setAverageComfort(double averageComfort) {
+        this.averageComfortLevel = averageComfort;
+    }
+
+    private double averageNausea;
+
+    public double getAverageNausea() {
+        return averageNausea;
+    }
+
+    public void setAverageNausea(double averageNausea) {
+        this.averageNausea = averageNausea;
+    }
+
     public List<String> getCommonComments() {
         return commonComments;
     }
